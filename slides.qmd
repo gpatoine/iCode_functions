@@ -1,0 +1,495 @@
+---
+title: "Functions: Reading, writing, debugging"
+title-slide-attributes:
+  data-background-image: iCode_logo_simple.png
+  data-background-size: contain
+  data-background-opacity: "0.2"
+format: 
+  revealjs:
+    theme: default
+editor: visual
+author: Guillaume Patoine
+logo: iCode_logo_simple.png
+footer: "iCode Seminar Series"
+toc: true
+toc-title: Contents
+preview-links: true
+---
+
+# 1. Using functions
+
+## Definition {.unnumbered .unlisted}
+
+A function in R is an **object** containing a set of interrelated statements that **run every time the function is called** to perform a **specific task**. They may return a meaningful value, or only be used for a side-effect, like creating a plot or writing to a file.
+
+
+## Why use functions? {.unnumbered .unlisted}
+
+- Optimize program
+- Avoid repetition
+- Prevent errors
+- Improve readability
+
+::: {.alert .alert-info style="text-align: center; max-width: 800; margin: auto; border: 3px solid black; padding: 10px;"}
+A good practice is creating a function whenever we're supposed to run a certain set of commands more than twice.
+:::
+
+
+## Example functions {.unnumbered .unlisted}
+
+- mean()
+- print()
+- read.csv()
+- ggplot()
+- `+`
+- %in%
+
+
+## What, that's a function! {.unnumbered .unlisted}
+
+```{r, echo=TRUE}
+1 + 1
+
+`+`
+
+# ?`+`
+
+is.function(`+`)
+
+`+`(1,1)
+
+4 %in% 1:5
+
+`%in%`(4, 1:5)
+
+`%in%`(4, 1:3)
+
+```
+
+## Function components
+
+:::: {.columns}
+
+::: {.column width="50%"}
+Name
+
+Argument list
+
+Body
+:::
+
+::: {.column width="50%"}
+Return value
+
+Environment
+:::
+
+::::
+
+
+::: panel-tabset
+
+## Basic
+```{r, echo=TRUE}
+name <- function(variables) {}
+name()
+
+name <- function(arg1, arg2, ...) {
+  # Function body 
+  return()
+}
+```
+## Example 1
+```{r, echo=TRUE}
+new_function1 <- function(arg1, arg2) {
+  
+  result <- 3*arg1 + arg2^2
+  return(result)
+  
+}
+
+new_function1(12, 3.2)
+```
+
+## Example 2
+```{r, echo=TRUE}
+new_function2 <- function() {
+   for(i in 1:3) {
+      print(i^2)
+   }
+}
+new_function2()
+```
+
+:::
+
+
+## Arguments: inputs {.unnumbered .unlisted}
+
+Argument matching: First by name, then by position.
+
+Arguments are only evaluated when used by the function (Lazy evaluation)
+
+::: panel-tabset
+
+## Definition
+
+```{r, echo=TRUE}
+new_function <- function(a,b,c) {
+   result <- a * b + c
+   print(result)
+}
+```
+
+## Call
+
+```{r, echo=TRUE}
+# Call the function by position of arguments.
+new_function(5, 3, 11)
+
+# Call the function by names of the arguments.
+new_function(c = 11, a = 5, b = 3)
+
+# Mix of both
+new_function(b = 3, 11, a = 5)
+
+```
+
+:::
+
+## Default values {.unnumbered .unlisted style="font-size: 90%;"}
+
+:::: {.columns}
+
+::: {.column width="30%"}
+- simple
+- complex expression
+- `NULL` (don't use `NA`)
+- vector of options
+- ...
+:::
+
+::: {.column width="70%"}
+
+```{r, echo=T, eval=F}
+
+ggsave <- function (filename, plot = last_plot(),
+          device = NULL,  path = NULL, scale = 1, 
+          width = NA, height = NA,
+          units = c("in", "cm", "mm", "px"),
+          dpi = 300, limitsize = TRUE, bg = NULL, ...) 
+{
+  
+  if (length(filename) == 0) {
+    cli::cli_abort("{.arg filename} cannot be empty.")
+  }
+  
+  if (is.null(width)) width <- 400
+  
+  units <- match.arg(units)
+  
+  [More code comes here]
+  
+  grid.draw(plot)
+  invisible(filename)
+}
+  
+  
+```
+
+:::
+
+::::
+
+
+## The ellipsis ... {.unnumbered .unlisted}
+
+The argument ... is special. It can contain any number of arguments and is used if **the number of arguments is unknown** OR **to pass arguments to another function**.
+
+::: panel-tabset
+
+## Unknown number
+
+```{r, echo=TRUE}
+HelloWorld <- function(...) {
+  arguments <- list(...)
+  paste(arguments, collapse = " ")
+}
+
+HelloWorld("Hello", "World", "!")
+```
+
+## Argument passing
+
+```{r, echo=TRUE, eval=FALSE}
+
+library(terra)
+
+r <- rast()
+
+# always use named arguments
+plot(r, maxcell=100000, grid = TRUE)
+
+
+```
+:::
+
+
+## Output: return value {.unnumbered .unlisted}
+
+`return()` is always the last expression evaluated by function.
+
+If no explicit return from a function, the value of the last evaluated expression is returned automatically.
+
+There can be multiple return statements, but only one executed.
+
+We can use `invisible()` to avoid printing the returned object.
+
+
+## Return example {.unnumbered .unlisted}
+
+```{r, echo=TRUE}
+check1 <- function(x) {
+  if (x > 0) {
+    result <- "Positive"
+  } else if (x < 0) {
+    result <- "Negative"
+  } else {
+    result <- "Zero"
+  }
+  result
+}
+
+check2 <- function(x) {
+  if (x > 0) {
+    return("Positive")
+  } else if (x < 0) {
+    return("Negative")
+  } else {
+    return("Zero")
+  }
+}
+```
+
+
+## Multiple returns?
+
+It is not possible to return multiple objects, but in R you can always create a 
+list to contain these objects.
+
+```{r, echo=TRUE}
+multi_return <- function() {
+  my_list <- list("color" = "red", "size" = 20, "shape" = "round")
+  return(my_list) 
+}
+
+a <- multi_return()
+
+a$color
+```
+
+
+## Environment {.unnumbered .unlisted}
+
+A function’s environment is the environment that was active **at the time that the function was created**. Any symbols bound in that environment are captured and available to the function
+
+When a function is called, a new environment (called the evaluation environment) is created.
+
+
+## Environment: example {style="font-size: 80%;" .unnumbered .unlisted}
+
+Where a function is created matters!
+
+::: panel-tabset
+
+## Defined on its own 
+
+```{r, echo=TRUE, error=TRUE}
+word1 <- "cat"
+print_words <- function() {
+  print(word1)
+  print(word2)
+}
+
+call_fct <- function() {
+  word2 <- "dog"
+  print_words()
+}
+call_fct()
+```
+
+
+```{r, echo=TRUE, error=TRUE}
+word2 <- "dog"
+call_fct()
+```
+## Defined inside other function
+
+
+```{r, echo=TRUE}
+word1 <- "cat"
+
+call_fct <- function() {
+  
+  print_words <- function() {
+    print(word1)
+    print(word2)
+  }
+  
+  word2 <- "dog"
+  print_words()
+  
+}
+
+call_fct()
+
+```
+
+:::
+
+
+## Accessing source code 
+
+
+::: {style="font-size: 80%;"}
+
+- F1 for documentation
+- print (no comment)
+- F2 (no comment)
+- check source code (Github/CRAN)
+- compiled code (primitive, c code, etc.)
+	- not *that* difficult, but rarely useful
+- methods
+	- bit annoying
+	- getAnywhere()
+	- methods(), showMethods(), getMethods()
+
+:::
+
+
+## Alternative function definition {.unnumbered .unlisted style="font-size: 80%;"}
+
+
+- Without brackets
+
+```{r, echo=TRUE} 
+
+fct <- function(df) df %>% filter(latitude < 75) 
+
+```
+
+- Short version
+
+```{r, echo=TRUE}
+fct <- \(x) x + 2
+```
+
+- tidyverse
+
+```{r, echo=TRUE, eval=FALSE}
+library(purrr)
+map(1:4, ~ .x + 2)
+```
+
+- Functional sequence
+
+```{r, echo=TRUE}
+library(dplyr)
+count_na <- . %>% is.na %>% sum
+count_na
+
+```
+
+
+# 2. Writing functions
+
+## Goal of the function
+
+- What is it for?
+  - In general, either **return an object OR perform a task**.
+- What goes in, what goes out? (Input --> fct --> Output)
+- Who will use it?
+  - More concrete VS more abstract/general?
+
+
+## Example: multiple outputs {.unnumbered .unlisted}
+
+**Usually considered bad practice**, but for personal use (e.g. exploring a dataset interactively), this might be the best solution in some cases.
+
+- plot
+- view
+- print (or cat)
+- save file (not used below)
+- copyClipboard
+
+
+## Example: multiple outputs {.unnumbered .unlisted}
+
+```{r, echo=TRUE}
+# Used for exploring a specific dataset, fetch all entries with the same
+# reference as an entry with a given id, make map, copy ids to clipboard
+check_id <- function(id = NULL) {
+  
+  ref <- get_ref(id)
+  ids <- as.numeric(get_ids(ref))
+  
+  df_small <- cutdf(main_data) %>% filter(plotID %in% ids)
+  
+  df_small %>% view(paste0("check_", id)) # view dataframe
+  gp_pointmap(df_small) # make plot
+  cat(ref) # print reference
+  dputran(ids) %>% writeClipboard # copy to clipboard
+  invisible(ids) # return values
+}
+```
+
+Then I ran this function 20+ times with different IDs to inspect my dataset.
+
+
+##  Guidelines
+
+- Always use package names
+    - :: for exported functions
+    - ::: for hidden functions
+- Might be easier to have separate functions for different steps needed
+
+
+## Checks
+
+Consider **Defensive programming** and functions that **break gracefully**. Worst 
+case scenario is when a function works, but returns a wrong/non-sensical result.
+Be precise about the type of data you expect.
+
+- `if (condition) stop("Error message")`
+- `stopifnot()`
+- package `checkmate`
+
+
+## Documentation
+
+- Describe in a comment what the function does, what arguments are needed
+- Add comments in the body, when important decisions are taken
+- Use `Roxygen2` for standardization and package writing
+  - Used to create documentation files
+
+
+## Organizing functions {.unnumbered .unlisted}
+
+Where should I put functions that I use?
+
+- In a section at the beginning of a script
+- Separate R script to `source("function.r")` in main script
+  - Tip: you can also `source()` a GitHub html using the `raw` link
+- R package: Not that complicated
+
+
+# 3. Debugging functions (short)
+
+- Set value in comment to run interactively
+  - and run the function body line by line
+- `print()` and `cat()` are your friends
+- breakpoints (in RStudio)
+- `debug()`, `undebug()`
+
+
+
